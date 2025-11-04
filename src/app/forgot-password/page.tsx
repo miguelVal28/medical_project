@@ -18,6 +18,7 @@ export default function ForgotPassword() {
     }
 
     if (!/\S+@\S+\.\S+/.test(email)) {
+      console.error("The received email is invalid");
       setError("Email is invalid");
       return;
     }
