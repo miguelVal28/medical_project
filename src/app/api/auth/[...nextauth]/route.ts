@@ -54,7 +54,7 @@ const handler = NextAuth({
     signOut: "/login",
     error: "/login",
   },
-  secret: "EKp3CiQnJMN0E2xFCz8fB6/x3806g7aQQneCIqz2ukw=",
+  secret: process.env.NEXTAUTH_SECRET,
 });
 
 export { handler as GET, handler as POST };

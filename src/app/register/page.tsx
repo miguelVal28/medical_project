@@ -66,7 +66,7 @@ export default function Register() {
         console.error("Registration failed:", error);
         setErrors({ ...errors, auth: error.message || "Something went wrong" });
       } else {
-        console.error("An unexpected error ocurred: ", error);
+        console.error("An unexpected error occurred: ", error);
       }
     } finally {
       setIsSubmitting(false);
