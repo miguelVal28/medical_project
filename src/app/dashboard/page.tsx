@@ -11,6 +11,10 @@ export default function Dashboard() {
     return <div className="p-8">Loading...</div>;
   }
 
+  if (!session) {
+    router.push('/login');
+    return null;
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 p-8">
       <div className="max-w-6xl mx-auto bg-white dark:bg-slate-900 rounded-xl shadow-lg p-8">
