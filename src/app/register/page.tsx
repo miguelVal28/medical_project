@@ -2,68 +2,43 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { InputField } from "@/components/inputFields";
+import { validateEmail, validatePassword } from "@/lib/validators";
+import { useRouter } from "next/navigation";
+import { supabaseClient } from "@/lib/supabase";
 
 export default function Register() {
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    userType: "patient", // patient or medical professional
-    agreeToTerms: false,
-  });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: checked }));
-  };
+  const [errors, setErrors] = useState<{
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+    auth?: string;
+  }>({});
+  const router = useRouter();
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+    const newErrors: {
+      email?: string;
+      password?: string;
+      confirmPassword?: string;
+    } = {};
 
-    if (!formData.firstName.trim())
-      newErrors.firstName = "First name is required";
-    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
+    const { emailError, emailIsValid } = validateEmail(email);
+    const { passwordError, passwordIsValid } = validatePassword(password, 6);
 
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
-    }
+    newErrors.email = emailError;
+    newErrors.password = passwordError;
 
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    } else if (!/[A-Z]/.test(formData.password)) {
-      newErrors.password =
-        "Password must contain at least one uppercase letter";
-    } else if (!/[0-9]/.test(formData.password)) {
-      newErrors.password = "Password must contain at least one number";
-    }
-
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (formData.confirmPassword !== formData.password) {
+    if (password !== confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
 
-    if (!formData.agreeToTerms) {
-      newErrors.agreeToTerms = "You must agree to the terms and conditions";
-    }
-
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return emailIsValid && passwordIsValid && password === confirmPassword;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,13 +49,25 @@ export default function Register() {
     setIsSubmitting(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate API request
-      console.log("Registration data:", formData);
+      const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password,
+      });
 
-      // Redirect to login page after successful registration
-      window.location.href = "/login";
-    } catch (error) {
-      console.error("Registration failed:", error);
+      console.log("Registry result: ", data);
+
+      if (error) {
+        setErrors({ ...errors, auth: error.message });
+      } else {
+        router.push("/login?registered=true");
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Registration failed:", error);
+        setErrors({ ...errors, auth: error.message || "Something went wrong" });
+      } else {
+        console.error("An unexpected error occurred: ", error);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -88,7 +75,7 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 p-4">
-      <div className="max-w-lg w-full space-y-8 bg-white dark:bg-slate-900 p-8 rounded-xl shadow-lg">
+      <div className="max-w-md w-full space-y-8 bg-white dark:bg-slate-900 p-8 rounded-xl shadow-lg">
         <div className="text-center">
           <div className="flex justify-center">
             <div className="h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center">
@@ -103,236 +90,56 @@ export default function Register() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                 />
               </svg>
             </div>
           </div>
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
-            Create an account
+            MediCare Connect
           </h2>
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            Join MediCare Connect
+            Create a new account
           </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {errors.auth && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">{errors.auth}</p>
+            </div>
+          )}
+
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* First Name */}
-              <div>
-                <label
-                  htmlFor="firstName"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  First name
-                </label>
-                <div className="mt-1">
-                  <input
-                    id="firstName"
-                    name="firstName"
-                    type="text"
-                    autoComplete="given-name"
-                    required
-                    className={`appearance-none relative block w-full px-3 py-2 border ${
-                      errors.firstName ? "border-red-300" : "border-gray-300"
-                    } dark:border-gray-700 dark:bg-slate-800 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                    value={formData.firstName}
-                    onChange={handleChange}
-                  />
-                  {errors.firstName && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.firstName}
-                    </p>
-                  )}
-                </div>
-              </div>
+            <InputField
+              id={"registerEmail"}
+              label={"Email address"}
+              type={"email"}
+              placeholder={"name@example.com"}
+              value={email}
+              error={errors.email}
+              onChange={(e) => setEmail(e.target.value)}
+            ></InputField>
 
-              {/* Last Name */}
-              <div>
-                <label
-                  htmlFor="lastName"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Last name
-                </label>
-                <div className="mt-1">
-                  <input
-                    id="lastName"
-                    name="lastName"
-                    type="text"
-                    autoComplete="family-name"
-                    required
-                    className={`appearance-none relative block w-full px-3 py-2 border ${
-                      errors.lastName ? "border-red-300" : "border-gray-300"
-                    } dark:border-gray-700 dark:bg-slate-800 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                    value={formData.lastName}
-                    onChange={handleChange}
-                  />
-                  {errors.lastName && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.lastName}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
+            <InputField
+              id={"registerPassword"}
+              label={"Password"}
+              type={"password"}
+              placeholder={"••••••••"}
+              value={password}
+              error={errors.password}
+              onChange={(e) => setPassword(e.target.value)}
+            ></InputField>
 
-            {/* Email */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                Email address
-              </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className={`appearance-none relative block w-full px-3 py-2 border ${
-                    errors.email ? "border-red-300" : "border-gray-300"
-                  } dark:border-gray-700 dark:bg-slate-800 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                  placeholder="name@example.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                />
-                {errors.email && (
-                  <p className="mt-1 text-xs text-red-500">{errors.email}</p>
-                )}
-              </div>
-            </div>
-
-            {/* User Type */}
-            <div>
-              <label
-                htmlFor="userType"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                I am a
-              </label>
-              <div className="mt-1">
-                <select
-                  id="userType"
-                  name="userType"
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-slate-800 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={formData.userType}
-                  onChange={handleChange}
-                >
-                  <option value="patient">Patient</option>
-                  <option value="doctor">Doctor</option>
-                  <option value="nurse">Nurse</option>
-                  <option value="admin">Administrator</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Password */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                Password
-              </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  className={`appearance-none relative block w-full px-3 py-2 border ${
-                    errors.password ? "border-red-300" : "border-gray-300"
-                  } dark:border-gray-700 dark:bg-slate-800 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
-                />
-                {errors.password ? (
-                  <p className="mt-1 text-xs text-red-500">{errors.password}</p>
-                ) : (
-                  <p className="mt-1 text-xs text-gray-500">
-                    Must be at least 8 characters with 1 uppercase and 1 number
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Confirm Password */}
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                Confirm password
-              </label>
-              <div className="mt-1">
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  className={`appearance-none relative block w-full px-3 py-2 border ${
-                    errors.confirmPassword
-                      ? "border-red-300"
-                      : "border-gray-300"
-                  } dark:border-gray-700 dark:bg-slate-800 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                  placeholder="••••••••"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                />
-                {errors.confirmPassword && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.confirmPassword}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Terms and Conditions */}
-            <div className="flex items-start">
-              <div className="flex items-center h-5">
-                <input
-                  id="agreeToTerms"
-                  name="agreeToTerms"
-                  type="checkbox"
-                  checked={formData.agreeToTerms}
-                  onChange={handleCheckboxChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:border-gray-700"
-                />
-              </div>
-              <div className="ml-3 text-sm">
-                <label
-                  htmlFor="agreeToTerms"
-                  className="font-medium text-gray-700 dark:text-gray-300"
-                >
-                  I agree to the{" "}
-                  <Link
-                    href="/terms"
-                    className="text-blue-600 hover:text-blue-500 dark:text-blue-400"
-                  >
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link
-                    href="/privacy"
-                    className="text-blue-600 hover:text-blue-500 dark:text-blue-400"
-                  >
-                    Privacy Policy
-                  </Link>
-                </label>
-                {errors.agreeToTerms && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.agreeToTerms}
-                  </p>
-                )}
-              </div>
-            </div>
+            <InputField
+              id={"confirmPassword"}
+              label={"Confirm Password"}
+              type={"password"}
+              placeholder={"••••••••"}
+              value={confirmPassword}
+              error={errors.confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            ></InputField>
           </div>
 
           <div>
@@ -363,21 +170,21 @@ export default function Register() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  Creating your account...
+                  Registering...
                 </span>
               ) : (
-                <span>Create account</span>
+                <span>Register</span>
               )}
             </button>
           </div>
         </form>
 
-        <div className="text-center">
+        <div className="mt-6 text-center">
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Already have an account?{" "}
             <Link
               href="/login"
-              className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400"
+              className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
             >
               Sign in
             </Link>

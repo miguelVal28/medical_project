@@ -5,15 +5,20 @@ import Link from "next/link";
 import Image from "next/image";
 import { InputField } from "@/components/inputFields";
 import { validateEmail, validatePassword } from "@/lib/validators";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
-    {}
-  );
+  const [errors, setErrors] = useState<{
+    email?: string;
+    password?: string;
+    auth?: string;
+  }>({});
+  const router = useRouter();
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -35,15 +40,22 @@ export default function Login() {
 
     setIsSubmitting(true);
 
-    // Simulate API call
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("Login credentials:", { email, password, rememberMe });
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
 
-      // Redirect to dashboard (would happen after successful login)
-      window.location.href = "/dashboard";
+      if (result?.error) {
+        setErrors({ ...errors, auth: "Invalid email or password" });
+      } else {
+        // Redirect to dashboard on successful login
+        router.push("/dashboard");
+      }
     } catch (error) {
       console.error("Login failed:", error);
+      setErrors({ ...errors, auth: "Something went wrong. Please try again." });
     } finally {
       setIsSubmitting(false);
     }
@@ -80,6 +92,12 @@ export default function Login() {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {errors.auth && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">{errors.auth}</p>
+            </div>
+          )}
+
           <div className="space-y-4">
             <InputField
               id={"loginEmail"}
