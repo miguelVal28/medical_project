@@ -5,11 +5,11 @@ import HeaderCard from "@/components/HeaderCard";
 
 export default function Dashboard() {
   // Placeholder user data - this would come from your authentication system
-  const [user] = useState({
+  const user = {
     name: "Dr. Jane Smith",
     role: "Physician",
     department: "Cardiology",
-  });
+  };
 
   return (
     <div className="px-4 py-6 sm:px-0">
