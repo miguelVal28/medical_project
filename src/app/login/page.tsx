@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { InputField } from "@/components/inputFields";
+import { InputField } from "@/components/InputFields";
 import { validateEmail, validatePassword } from "@/lib/validators";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
