@@ -5,7 +5,7 @@ export interface QueryResultSchema {
   last_name: string;
   document_type: string;
   document: string;
-  birht_date: string;
+  birth_date: string;
   civil_state: string;
   sex: string;
   gender: string;
