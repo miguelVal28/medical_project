@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { InputField } from "@/components/inputFields";
+import { InputField } from "@/components/InputFields";
 import { validateEmail, validatePassword } from "@/lib/validators";
 import { useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabase";

@@ -10,8 +10,12 @@ interface SidebarItem {
   icon: React.ReactNode;
 }
 
-export default function Sidebar() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+interface SidebarProps {
+  isExpanded: boolean;
+  onToggle: () => unknown;
+}
+
+export default function Sidebar({ isExpanded, onToggle }: SidebarProps) {
   const pathname = usePathname();
 
   const menuItems: SidebarItem[] = [
@@ -26,6 +30,24 @@ export default function Sidebar() {
           fill="currentColor"
         >
           <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+        </svg>
+      ),
+    },
+    {
+      name: "Patients",
+      href: "/patients/lookup",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-5 w-5"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+            clipRule="evenodd"
+          />
         </svg>
       ),
     },
@@ -47,6 +69,7 @@ export default function Sidebar() {
         </svg>
       ),
     },
+
     {
       name: "Settings",
       href: "/settings",
@@ -71,18 +94,16 @@ export default function Sidebar() {
   return (
     <div
       className={`${
-        isCollapsed ? "w-16" : "w-64"
+        isExpanded ? "w-64" : "w-16"
       } fixed h-full bg-white dark:bg-gray-900 border-r dark:border-gray-800 transition-width duration-300 ease-in-out z-10`}
     >
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between p-4 border-b dark:border-gray-800">
-          {!isCollapsed && (
-            <h1 className="text-lg font-semibold">Medical App</h1>
-          )}
+          {isExpanded && <h1 className="text-lg font-semibold">Medical App</h1>}
           <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
+            onClick={() => onToggle()}
             className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -90,7 +111,7 @@ export default function Sidebar() {
               viewBox="0 0 20 20"
               fill="currentColor"
             >
-              {isCollapsed ? (
+              {!isExpanded ? (
                 <path
                   fillRule="evenodd"
                   d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
@@ -120,7 +141,7 @@ export default function Sidebar() {
                   } transition-colors`}
                 >
                   <span className="mr-3">{item.icon}</span>
-                  {!isCollapsed && <span>{item.name}</span>}
+                  {isExpanded && <span>{item.name}</span>}
                 </Link>
               </li>
             ))}
@@ -130,7 +151,7 @@ export default function Sidebar() {
         <div className="p-4 border-t dark:border-gray-800">
           <button
             className={`${
-              isCollapsed ? "justify-center" : "justify-start"
+              isExpanded ? "justify-center" : "justify-start"
             } w-full flex items-center p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors`}
           >
             <svg
@@ -145,7 +166,7 @@ export default function Sidebar() {
                 clipRule="evenodd"
               />
             </svg>
-            {!isCollapsed && <span className="ml-2">Logout</span>}
+            {!isExpanded && <span className="ml-2">Logout</span>}
           </button>
         </div>
       </div>
