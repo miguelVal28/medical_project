@@ -13,7 +13,7 @@ export default function MainLayout({
 
   //Toggle the sidebar state
   function toggleSidebar() {
-    return setSidebarExpanded(!sidebarExpanded);
+    setSidebarExpanded(!sidebarExpanded);
   }
 
   const contentWidthClass = sidebarExpanded ? "md:ml-64" : "ml-16";
