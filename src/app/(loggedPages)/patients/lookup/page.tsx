@@ -52,8 +52,6 @@ export default function PatientLookupPage() {
                     .or(
                       `email.eq.${values.email}, document.eq.${values.document}`
                     );
-                  //.eq("email", values.email);
-
                   if (error) {
                     console.error("Error!", error);
                   }
