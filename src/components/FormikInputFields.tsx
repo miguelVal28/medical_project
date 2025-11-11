@@ -16,7 +16,7 @@ export function FormikInputField({
   placeholder,
   type,
 }: FormikInputFieldProps) {
-  const [field, meta] = useField({ id, name, placeholder });
+  const [field, meta] = useField(name);
 
   return (
     <InputField
