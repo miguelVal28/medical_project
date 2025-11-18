@@ -1,7 +1,6 @@
 "use server";
 
-import { CreateServerClient } from "./baseDatabaseService";
-import type { SupabaseQueryResult } from "@/lib/types/queryTypes";
+import { CreateServerClient } from "./databaseService";
 
 export async function patientLookupQuery(email?: string, document?: string) {
   if (!email && !document) return null;

@@ -1,6 +1,6 @@
 "use server";
 
-import { CreateServerClient } from "./baseDatabaseService";
+import { CreateServerClient } from "./databaseService";
 
 // Define the profile type
 export type Profile = {
@@ -32,8 +32,6 @@ export async function signMedic(email: string, password: string) {
 export async function getMedicData(email: string): Promise<Profile | null> {
   if (!email) return null;
 
-  console.log("I run in the server!");
-
   const supabase = CreateServerClient();
   try {
     const { data, error } = await supabase
@@ -59,30 +57,29 @@ export async function saveMedicProfile(email: string, profile: Profile) {
   if (!email) return;
   const supabase = CreateServerClient();
 
-  try {
-    //Update the data from the medic within the profile page
-    const result = await supabase
-      .from("medics")
-      .update({
-        first_name: profile.first_name,
-        last_name: profile.last_name,
-        birth_date: profile.birth_date,
-        specialty: profile.specialty,
-        consultory: profile.consultory,
-      })
-      .eq("email", email);
-    if (result.error) {
-      throw result.error;
-    }
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error("Error saving profile:", error);
-    } else {
-      console.error("Unhandled exception:", error);
-    }
+  //Update the data from the medic within the profile page
+  const result = await supabase
+    .from("medics")
+    .update({
+      first_name: profile.first_name,
+      last_name: profile.last_name,
+      birth_date: profile.birth_date,
+      specialty: profile.specialty,
+      consultory: profile.consultory,
+    })
+    .eq("email", email)
+    .select();
 
-    return null;
+  console.log("Results from medic update", result);
+
+  if (result.data?.length === 0) {
+    console.log(`No update required`);
   }
+
+  if (result.error) {
+    throw result.error;
+  }
+  return;
 }
 
 // // Fetch specialty enum options from Supabase
