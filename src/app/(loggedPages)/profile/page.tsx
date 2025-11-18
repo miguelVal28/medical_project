@@ -173,6 +173,7 @@ export default function ProfilePage() {
                   placeholder="Enter your first name"
                   value={profile.first_name || ""}
                   onChange={handleChange}
+                  disabled={false}
                 />
               </div>
 
@@ -184,6 +185,7 @@ export default function ProfilePage() {
                   placeholder="Enter your last name"
                   value={profile.last_name || ""}
                   onChange={handleChange}
+                  disabled={false}
                 />
               </div>
 
@@ -235,6 +237,7 @@ export default function ProfilePage() {
                   placeholder="Enter your consultation room"
                   value={profile.consultory || ""}
                   onChange={handleChange}
+                  disabled={false}
                 />
               </div>
 

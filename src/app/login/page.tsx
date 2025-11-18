@@ -113,6 +113,7 @@ export default function Login() {
               value={email}
               error={errors.email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={false}
             ></InputField>
 
             <InputField
@@ -123,6 +124,7 @@ export default function Login() {
               value={password}
               error={errors.password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={false}
             ></InputField>
 
             <Link

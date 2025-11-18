@@ -9,6 +9,7 @@ interface Input {
   value: string;
   error?: string;
   onChange: ChangeEventHandler<HTMLInputElement> | undefined;
+  disabled: boolean;
 }
 
 export function InputField({
@@ -18,6 +19,7 @@ export function InputField({
   placeholder,
   value,
   error,
+  disabled = false,
   onChange,
 }: Input) {
   return (
@@ -39,6 +41,7 @@ export function InputField({
           placeholder={placeholder}
           value={value}
           onChange={onChange}
+          disabled={disabled}
         />
         {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
       </div>

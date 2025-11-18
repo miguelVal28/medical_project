@@ -1,15 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { Button } from "@/components/Button";
+import Link from "next/link";
 import HeaderCard from "@/components/HeaderCard";
 
 export default function Dashboard() {
   // Placeholder user data - this would come from your authentication system
-  const user = {
-    name: "Dr. Jane Smith",
-    role: "Physician",
-    department: "Cardiology",
-  };
 
   return (
     <div className="px-4 py-6 sm:px-0">
@@ -25,16 +21,35 @@ export default function Dashboard() {
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">
               Quick Actions
             </h3>
-            <div className="mt-4 space-y-2">
-              <button className="w-full px-4 py-2 text-sm rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                New Patient
-              </button>
-              <button className="w-full px-4 py-2 text-sm rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                Schedule Appointment
-              </button>
-              <button className="w-full px-4 py-2 text-sm rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                View Patient Records
-              </button>
+            <div className="grid grid-cols-1 mt-4 space-y-2">
+              <Link href="patients/profile">
+                <Button
+                  type="button"
+                  variant="primary"
+                  className="w-full px-4 py-2 text-sm rounded-md text-white"
+                >
+                  New Patient
+                </Button>
+              </Link>
+
+              <Link href="#">
+                <Button
+                  type="button"
+                  variant="primary"
+                  className="w-full px-4 py-2 text-sm rounded-md text-white"
+                >
+                  Schedule Appointment
+                </Button>
+              </Link>
+              <Link href="patients/lookup">
+                <Button
+                  type="button"
+                  variant="primary"
+                  className="w-full px-4 py-2 text-sm rounded-md text-white"
+                >
+                  View Patient Records
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
