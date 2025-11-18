@@ -78,7 +78,7 @@ function QueryResultModernItem({ result, index }: QueryResultModernItemProps) {
           </span>
         </div>
       </div>
-      <Link href="/patients/create">
+      <Link href={`/patients/profile/?userId=${result.id}`}>
         <Button type="button" variant="primary" className="ml-4">
           View Patient
         </Button>

@@ -7,18 +7,12 @@ import QueryResultList from "@/components/QueryResult";
 import { FormikInputField } from "@/components/FormikInputFields";
 import { Formik, Form } from "formik";
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
 import type { QueryResultListSchema } from "@/lib/types/queryTypes";
+import { patientLookupQuery } from "@/services/patientsService";
 
 export default function PatientLookupPage() {
   const [queryStatus, setQueryStatus] = useState(0);
   const [queryData, setQueryData] = useState([{}]);
-
-  // ! Private data is exposed! Fix immediatly
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || ""
-  );
 
   return (
     <div className="px-4 py-6 sm:px-0">
@@ -42,22 +36,15 @@ export default function PatientLookupPage() {
                   document: "",
                 }}
                 onSubmit={async (values) => {
-                  const {
-                    data: patients,
-                    error,
-                    status,
-                  } = await supabase
-                    .from("patients")
-                    .select("*")
-                    .or(
-                      `email.eq.${values.email}, document.eq.${values.document}`
-                    );
-                  if (error) {
-                    console.error("Error!", error);
-                  }
+                  const patient = await patientLookupQuery(
+                    values.email,
+                    values.document
+                  );
 
-                  setQueryStatus(status);
-                  setQueryData(patients as QueryResultListSchema);
+                  if (patient) {
+                    setQueryStatus(patient.status);
+                    setQueryData(patient.data as QueryResultListSchema);
+                  }
                 }}
               >
                 {({ isSubmitting }) => (
@@ -83,7 +70,7 @@ export default function PatientLookupPage() {
                       <Button type="submit" disabled={isSubmitting}>
                         {isSubmitting ? "Searching..." : "Search Patient"}
                       </Button>
-                      <Link href="/patients/create">
+                      <Link href="/patients/profile">
                         <Button
                           type="button"
                           variant="secondary"

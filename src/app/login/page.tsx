@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { InputField } from "@/components/InputFields";
 import { validateEmail, validatePassword } from "@/lib/validators";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export default function Login() {
+  const { status } = useSession();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -18,7 +20,11 @@ export default function Login() {
     password?: string;
     auth?: string;
   }>({});
-  const router = useRouter();
+
+  if (status === "authenticated") {
+    router.push("/dashboard");
+    return;
+  }
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -84,7 +90,7 @@ export default function Login() {
             </div>
           </div>
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
-            MediCare Connect
+            Alexandria Medicare
           </h2>
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
             Sign in to your account

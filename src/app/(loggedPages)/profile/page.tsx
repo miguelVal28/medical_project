@@ -7,35 +7,50 @@ import { useRouter } from "next/navigation";
 import { InputField } from "@/components/InputFields";
 import { Button } from "@/components/Button";
 import HeaderCard from "@/components/HeaderCard";
-import { supabaseClient } from "@/lib/supabase";
+import { getMedicData, saveMedicProfile } from "@/services/medicService";
 
-// Define the profile type
 type Profile = {
   id: string;
   user_id: string;
   first_name: string;
   last_name: string;
-  birth_year: string;
+  birth_date: string;
   specialty: string;
-  consultation_room: string;
+  consultory: string;
 };
+
+const specialtyOptions = [
+  "Cardiologist",
+  "Physiotherapist",
+  "Obstetrics",
+  "Psychiatry",
+  "Anesthesiology",
+  "Immunology",
+  "Neurology",
+  "Orthopedist",
+  "Gastroenterology",
+  "Hematology",
+  "Oncology",
+  "Ophthalmology",
+  "Family medicine",
+  "Radiologyist",
+  "Dermatologist",
+];
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [specialtyOptions, setSpecialtyOptions] = useState<string[]>([]);
   const [message, setMessage] = useState({ text: "", type: "" });
-  const [userId, setUserId] = useState<string | null>(null);
 
   // Form state
   const [profile, setProfile] = useState<Partial<Profile>>({
     first_name: "",
     last_name: "",
-    birth_year: "",
+    birth_date: "",
     specialty: "",
-    consultation_room: "",
+    consultory: "",
   });
 
   // Handle input changes
@@ -49,148 +64,34 @@ export default function ProfilePage() {
     }));
   };
 
-  // Get user ID from email
-  const getUserIdFromEmail = async (email: string) => {
-    try {
-      const { data, error } = await supabaseClient
-        .from("auth.users")
-        .select("id")
-        .eq("email", email)
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      if (data && data.id) {
-        setUserId(data.id);
-        return data.id;
-      }
-
-      return null;
-    } catch (error) {
-      console.error("Error fetching user ID:", error);
-      return null;
+  // Save profile wrapper
+  async function handleSaveProfile() {
+    if (!session?.user?.email) {
+      setMessage({
+        text: "Unable to sabe profile. No email found",
+        type: "error",
+      });
+      return;
     }
-  };
 
-  // Fetch specialty enum options from Supabase
-  const fetchSpecialtyOptions = async () => {
-    try {
-      // Getting enum values directly from Supabase's type information
-      const { data, error } = await supabaseClient.rpc(
-        "get_specialty_enum_values"
-      );
+    const { email } = session.user;
 
-      if (error) {
-        console.error("Error fetching specialty options:", error);
-        return;
-      }
-
-      if (data) {
-        setSpecialtyOptions(data);
-      }
-    } catch (error) {
-      console.error("Error fetching specialty options:", error);
-    }
-  };
-
-  // Fetch user profile data
-  const fetchUserProfile = async (uid: string) => {
-    try {
-      const { data, error } = await supabaseClient
-        .from("profiles")
-        .select("*")
-        .eq("user_id", uid)
-        .single();
-
-      if (error && error.code !== "PGRST116") {
-        // PGRST116 is the error code for "no rows found"
-        console.error("Error fetching profile:", error);
-        return;
-      }
-
-      if (data) {
-        setProfile({
-          id: data.id,
-          user_id: data.user_id,
-          first_name: data.first_name || "",
-          last_name: data.last_name || "",
-          birth_year: data.birth_year || "",
-          specialty: data.specialty || "",
-          consultation_room: data.consultation_room || "",
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Save or update user profile
-  const saveProfile = async () => {
-    if (!userId) return;
-
-    setSaving(true);
-    setMessage({ text: "", type: "" });
+    setSaving(true); // Put the page in a loading state
 
     try {
-      // Determine if we're updating or inserting
-      const { data: existingProfile } = await supabaseClient
-        .from("profiles")
-        .select("id")
-        .eq("user_id", userId)
-        .single();
-
-      let result;
-
-      if (existingProfile) {
-        // Update existing profile
-        result = await supabaseClient
-          .from("profiles")
-          .update({
-            first_name: profile.first_name,
-            last_name: profile.last_name,
-            birth_year: profile.birth_year,
-            specialty: profile.specialty,
-            consultation_room: profile.consultation_room,
-          })
-          .eq("user_id", userId);
-      } else {
-        // Insert new profile
-        result = await supabaseClient.from("profiles").insert({
-          user_id: userId,
-          first_name: profile.first_name,
-          last_name: profile.last_name,
-          birth_year: profile.birth_year,
-          specialty: profile.specialty,
-          consultation_room: profile.consultation_room,
-        });
-      }
-
-      if (result.error) {
-        throw result.error;
-      }
+      await saveMedicProfile(email, profile as Profile);
 
       setMessage({
-        text: "Profile saved successfully!",
+        text: "Profile saved successfully",
         type: "success",
       });
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Error saving profile:", error);
-        setMessage({
-          text: `Error saving profile: ${error.message}`,
-          type: "error",
-        });
-      } else {
-        console.error("Unhandled exception:", error);
-      }
+    } catch (error) {
+      console.error("Error while saving the profile: ", error);
+      setMessage({ text: "Failed to save profile.", type: "error" });
     } finally {
       setSaving(false);
     }
-  };
+  }
 
   useEffect(() => {
     // Redirect if not authenticated
@@ -201,19 +102,22 @@ export default function ProfilePage() {
 
     const initializeProfile = async () => {
       try {
-        // Fetch specialty options
-        await fetchSpecialtyOptions();
-
         // Get user ID from email
         if (session?.user?.email) {
-          const uid = await getUserIdFromEmail(session.user.email);
+          const medicProfile = await getMedicData(session.user.email);
 
-          if (uid) {
-            // Fetch user profile using the obtained user ID
-            await fetchUserProfile(uid);
-          } else {
-            setLoading(false);
+          if (medicProfile) {
+            setProfile({
+              id: medicProfile.id,
+              user_id: medicProfile.user_id,
+              first_name: medicProfile.first_name,
+              last_name: medicProfile.last_name,
+              birth_date: medicProfile.birth_date,
+              specialty: medicProfile.specialty,
+              consultory: medicProfile.consultory,
+            });
           }
+          setLoading(false);
         } else {
           setLoading(false);
         }
@@ -295,7 +199,7 @@ export default function ProfilePage() {
                   name="birth_year"
                   type="date"
                   className="mt-1 appearance-none relative block w-full px-3 py-2 border dark:border-gray-700 dark:bg-slate-800 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={profile.birth_year || ""}
+                  value={profile.birth_date || ""}
                   onChange={handleChange}
                 />
               </div>
@@ -329,7 +233,7 @@ export default function ProfilePage() {
                   label="Consultation Room"
                   type="text"
                   placeholder="Enter your consultation room"
-                  value={profile.consultation_room || ""}
+                  value={profile.consultory || ""}
                   onChange={handleChange}
                 />
               </div>
@@ -337,7 +241,7 @@ export default function ProfilePage() {
               <div className="md:col-span-2 pt-4">
                 <Button
                   type="button"
-                  onClick={saveProfile}
+                  onClick={handleSaveProfile}
                   isLoading={saving}
                   variant="primary"
                 >
@@ -381,7 +285,7 @@ export default function ProfilePage() {
                   Consultation Room
                 </dt>
                 <dd className="mt-1 text-sm text-gray-900 dark:text-white">
-                  {profile.consultation_room || "Not set"}
+                  {profile.consultory || "Not set"}
                 </dd>
               </div>
               <div>

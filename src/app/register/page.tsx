@@ -5,7 +5,7 @@ import Link from "next/link";
 import { InputField } from "@/components/InputFields";
 import { validateEmail, validatePassword } from "@/lib/validators";
 import { useRouter } from "next/navigation";
-import { supabaseClient } from "@/lib/supabase";
+import { signMedic } from "@/services/medicService";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -49,18 +49,11 @@ export default function Register() {
     setIsSubmitting(true);
 
     try {
-      const { data, error } = await supabaseClient.auth.signUp({
-        email,
-        password,
-      });
+      const data = signMedic(email, password);
 
       console.log("Registry result: ", data);
 
-      if (error) {
-        setErrors({ ...errors, auth: error.message });
-      } else {
-        router.push("/login?registered=true");
-      }
+      router.push("/login?registered=true");
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error("Registration failed:", error);
@@ -96,7 +89,7 @@ export default function Register() {
             </div>
           </div>
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
-            MediCare Connect
+            Alexandria Medicare
           </h2>
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
             Create a new account
