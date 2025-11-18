@@ -1,3 +1,5 @@
+import { type } from "os";
+
 export interface QueryResultSchema {
   id: string;
   email: string;
@@ -17,3 +19,11 @@ export interface QueryResultSchema {
 }
 
 export type QueryResultListSchema = QueryResultSchema[];
+
+export type SupabaseQueryResult = {
+  error?: string;
+  data?: Record<string, unknown>[];
+  count?: number;
+  status?: number;
+  statusText?: string;
+};
