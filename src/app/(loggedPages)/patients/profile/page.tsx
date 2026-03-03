@@ -235,7 +235,7 @@ export default function PatientProfilePage() {
                 </div>
                 <div className="md:col-span-2 pt-4">
                   <Button type="submit">Update</Button>
-                  <Link href="#">
+                  <Link href={`/consultation?patientId=${id}`}>
                     <Button type="button" variant="secondary" className="ml-4">
                       Iniciar consulta
                     </Button>
